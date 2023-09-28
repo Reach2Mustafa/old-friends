@@ -158,7 +158,7 @@ const Nav = ({ theme2, toggleTheme, toggleTheme1, themee }) => {
   
   <button
                  
-                  className={`bg-[#ebebed] w-[13vw] py-2 px-2 rounded-[30px] ${pageClass4}`}
+                  className={`bg-[#ebebed] w-[15vw] py-2 px-2 rounded-[30px] ${pageClass4}`}
                 >
                   <div  className="w-full flex justify-center items-center ml-4">
                   <div className="flex gap-2 h-max" >
