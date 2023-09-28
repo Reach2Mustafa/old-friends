@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body{
+  background-color: #d5d5d7;
+ 
+}
+
+.dark-theme {
+  background-color: black;
+  color: white;
+}
+
+.dark-theme1{
+  background-color: #1a1a1b;
+  color: white;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dark-theme2{
+  background-color:#f8f8fa0d;
+  
+}
+.dark-theme3{
+ 
+ background-color: #1a1a1b;
+  
+}
+.dark-theme4{
+ background-color: #252527;
+}
+.dark-theme5{
+  background-color: black;
+  color: white;
+}
+.dark-theme6{
+  background-color: white;
+}
+.dark-theme7{
+  color: white;
+}
+
+
+
+
