@@ -23,11 +23,16 @@ jobs:
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
         IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
-        # Stop and remove the existing container if it exists
-        if [ "$(docker ps -aq -f name=${IMAGE_NAME})" ]; then
+        # Check if the container exists before stopping and removing
+        CONTAINER_ID=$(docker ps -aq -f name=${IMAGE_NAME})
+        if [ -n "$CONTAINER_ID" ]; then
+          echo "Stopping and removing container ${IMAGE_NAME}"
           docker stop ${IMAGE_NAME}
           docker rm ${IMAGE_NAME}
+        else
+          echo "No existing container to stop or remove."
         fi
+
 
     - name: Run Docker Container
       run: |
