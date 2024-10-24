@@ -1,6 +1,6 @@
 "use client"
 import './globals.css'
-import React from 'react';
+import React, { useState } from 'react';
 import Nav from './Mycomponents/Nav';
 import C1 from './Mycomponents/c1';
 import C2 from './Mycomponents/c2';
