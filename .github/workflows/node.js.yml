@@ -18,14 +18,16 @@ jobs:
         IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         docker build -t $IMAGE_NAME:latest .
 
-    - name: Stop and Remove Existing Container
+    - name: Stop and Remove Existing Containers
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
         IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         # Stop and remove the existing container if it exists
-        docker stop $IMAGE_NAME || true
-        docker rm $IMAGE_NAME || true
+        if [ "$(docker ps -aq -f name=${IMAGE_NAME})" ]; then
+          docker stop ${IMAGE_NAME}
+          docker rm ${IMAGE_NAME}
+        fi
 
     - name: Run Docker Container
       run: |
@@ -38,16 +40,21 @@ jobs:
     - name: Health Check
       run: |
         sleep 10 # Give the container some time to start
-        curl --fail http://localhost:3333/api/health || (echo "Health check failed" && exit 1)
+        if ! curl --fail http://localhost:3333/api/health; then
+          echo "Health check failed"
+          exit 1
+        fi
 
     - name: Switch to New Container
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
         IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
-        # Stop and remove the old container
-        docker stop $IMAGE_NAME || true
-        docker rm $IMAGE_NAME || true
+        # Stop and remove the old container if it exists
+        if [ "$(docker ps -aq -f name=${IMAGE_NAME})" ]; then
+          docker stop ${IMAGE_NAME}
+          docker rm ${IMAGE_NAME}
+        fi
         
         # Rename the new container to the original name
         docker rename "${IMAGE_NAME}_new" $IMAGE_NAME
