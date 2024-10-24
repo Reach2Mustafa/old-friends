@@ -14,13 +14,16 @@ jobs:
     - name: Build Docker Image
       run: |
         REPO_NAME=${{ github.repository }}
-        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${REPO_NAME//\//_}"   # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}"        # Convert to lowercase
         docker build -t $IMAGE_NAME:latest .
 
     - name: Run Docker Container
       run: |
         REPO_NAME=${{ github.repository }}
-        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${REPO_NAME//\//_}"   # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}"        # Convert to lowercase
+        
         # Create and start the new container on port 3333
         docker run -d --name "${IMAGE_NAME}_new" -p 3333:3333 $IMAGE_NAME:latest
 
@@ -28,15 +31,27 @@ jobs:
       run: |
         # Wait for the new container to start and check health
         sleep 10 # Give the container some time to start
-        curl --fail http://localhost:3333/health || (echo "Health check failed" && exit 1)
+        if ! curl --fail http://localhost:3333/health; then
+          echo "Health check failed" && exit 1
+        fi
 
     - name: Switch to New Container
       run: |
         REPO_NAME=${{ github.repository }}
-        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
-        # Stop and remove the old container
-        docker stop $IMAGE_NAME || true
-        docker rm $IMAGE_NAME || true
+        IMAGE_NAME="${REPO_NAME//\//_}"   # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}"        # Convert to lowercase
+        
+        # Stop and remove the old container if it exists
+        if docker ps -q --filter "name=$IMAGE_NAME"; then
+          docker stop $IMAGE_NAME || true
+          docker rm $IMAGE_NAME || true
+        fi
         
         # Rename the new container to the original name
         docker rename "${IMAGE_NAME}_new" $IMAGE_NAME
+
+    - name: Clean Up
+      run: |
+        # Optionally clean up old images and containers
+        docker image prune -f
+        docker container prune -f
