@@ -15,12 +15,14 @@ jobs:
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         docker build -t $IMAGE_NAME:latest .
 
     - name: Stop and Remove Existing Container
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         # Stop and remove the existing container if it exists
         docker stop $IMAGE_NAME || true
         docker rm $IMAGE_NAME || true
@@ -29,6 +31,7 @@ jobs:
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         # Create and start the new container on port 3333
         docker run -d --name "${IMAGE_NAME}_new" -p 3333:3333 $IMAGE_NAME:latest
 
@@ -41,6 +44,7 @@ jobs:
       run: |
         REPO_NAME=${{ github.repository }}
         IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        IMAGE_NAME="${IMAGE_NAME,,}" # Convert to lowercase
         # Stop and remove the old container
         docker stop $IMAGE_NAME || true
         docker rm $IMAGE_NAME || true
