@@ -6,50 +6,37 @@ on:
 
 jobs:
   build:
-
     runs-on: self-hosted
-
-    strategy:
-      matrix:
-        node-version: [22.2.0]
 
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    # Install dependencies
-    - run: npm ci
 
-    # Build in a temporary directory
-    - name: Build in a temporary directory
+    - name: Build Docker Image
       run: |
-        mkdir temp_build
-        cp -R * temp_build/
-        cd temp_build
-        npm run build --if-present
+        REPO_NAME=${{ github.repository }}
+        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        docker build -t $IMAGE_NAME:latest .
 
-    # Test if the build was successful
-    - name: Check if build succeeded
+    - name: Run Docker Container
       run: |
-        if [ -d "temp_build" ]; then
-          echo "Build succeeded, proceeding with deployment..."
-        else
-          echo "Build failed, stopping process."
-          exit 1
-        fi
+        REPO_NAME=${{ github.repository }}
+        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        # Create and start the new container on port 3333
+        docker run -d --name "${IMAGE_NAME}_new" -p 3333:3333 $IMAGE_NAME:latest
 
-    # If the build was successful, deploy the new version
-    - name: Deploy new build
-      if: success()
+    - name: Health Check
       run: |
-        cp -R temp_build/* ./
-        rm -rf temp_build
-        pm2 restart 8
+        # Wait for the new container to start and check health
+        sleep 10 # Give the container some time to start
+        curl --fail http://localhost:3333/health || (echo "Health check failed" && exit 1)
 
-    # Cleanup the temporary build directory
-    - name: Cleanup
-      run: rm -rf temp_build
+    - name: Switch to New Container
+      run: |
+        REPO_NAME=${{ github.repository }}
+        IMAGE_NAME="${REPO_NAME//\//_}" # Replace '/' with '_' for valid image name
+        # Stop and remove the old container
+        docker stop $IMAGE_NAME || true
+        docker rm $IMAGE_NAME || true
+        
+        # Rename the new container to the original name
+        docker rename "${IMAGE_NAME}_new" $IMAGE_NAME
